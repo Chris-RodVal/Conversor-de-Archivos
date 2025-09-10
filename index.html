@@ -3,19 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conversor de Documentos | GitHub Pages</title>
+  <title>Conversor de Documentos — estilo iLovePDF</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: { extend: {
-        colors: { bg:'#0B0F17', card:'#0f172a', card2:'#111827', pri:'#22d3ee', pri2:'#06b6d4', acc:'#a78bfa' }
-      }}
-    };
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0B0F17',
+            card: '#0f172a',
+            card2: '#111827',
+            pri: '#ef4444',    /* rojo estilo iLovePDF */
+            pri2:'#f97316',
+            ink:'#e5e7eb'
+          }
+        }
+      }
+    }
   </script>
-  <!-- Librerías para conversiones locales -->
+
+  <!-- Librerías cliente -->
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
   <script>
     if (window.pdfjsLib) {
@@ -25,150 +36,164 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
   <style>
     :root { color-scheme: dark; }
     html, body { height: 100%; }
     .glass { backdrop-filter: blur(6px); }
-    .dropzone.dragover { border-color:#22d3ee; background:rgba(34,211,238,.08); }
-    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .dropzone.dragover { border-color:#ef4444; background:rgba(239,68,68,.08); }
+    .brand-grad { background: linear-gradient(135deg,#ef4444, #f97316); }
   </style>
 </head>
-<body class="bg-bg text-slate-200">
+<body class="bg-bg text-ink">
   <!-- Header -->
-  <header class="sticky top-0 z-40 border-b border-slate-800/60 bg-bg/70 glass">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+  <header class="sticky top-0 z-40 border-b border-white/5 bg-bg/70 glass">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
+        <span class="text-2xl" title="Conversor">📑</span>
         <h1 class="text-lg md:text-xl font-semibold tracking-tight">Conversor de Documentos</h1>
-        <span class="text-xs text-slate-400 hidden md:inline">Sube .docx, .pptx o .pdf → elige salida y descarga</span>
       </div>
-      <nav class="flex items-center gap-4 text-sm">
+      <nav class="flex items-center gap-5 text-sm">
         <a class="hover:text-pri transition" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer">FAQ</a>
         <a class="hover:text-pri transition" href="mailto:chris.rodval@gmail.com">Soporte</a>
-        <span class="text-2xl" title="Conversor">📑</span>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-8">
-    <!-- Card principal -->
-    <section class="rounded-2xl bg-card shadow p-6 md:p-8 border border-slate-800/70">
-      <div class="grid md:grid-cols-3 gap-6">
-        <div class="md:col-span-2">
-          <div id="dropzone" tabindex="0" role="button" aria-label="Subir archivos"
-               class="relative dropzone rounded-2xl border-2 border-dashed border-slate-700/80 p-6 flex flex-col items-center justify-center text-center cursor-pointer transition select-none">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="mb-3 opacity-80"><path d="M12 16V4m0 12l-3-3m3 3l3-3M6 20h12a2 2 0 002-2v-3a2 2 0 00-2-2h-.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p class="text-slate-300">Arrastra tus archivos aquí</p>
-            <p class="text-slate-500 text-sm">o haz clic para seleccionar</p>
-            <!-- Input cubre toda el área: robusto en todos los navegadores -->
-            <input id="fileInput" type="file"
-                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                   accept=".docx,.pptx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                   multiple>
-          </div>
+  <!-- Hero estilo iLovePDF -->
+  <section class="brand-grad text-white">
+    <div class="max-w-6xl mx-auto px-4 py-10 md:py-14 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">Convierte DOCX, PPTX y PDF con la simpleza que te gusta</h2>
+        <p class="mt-3 text-white/90">Sube tus archivos y elige una acción rápida: DOCX→PDF, PDF→Imágenes, PDF→Texto o PPTX→ZIP de recursos. Todo se procesa localmente en tu navegador.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button id="quick-docx-pdf" class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold hover:opacity-90">DOCX → PDF</button>
+          <button id="quick-pdf-img" class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold hover:opacity-90">PDF → Imágenes</button>
+          <button id="quick-pdf-txt" class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold hover:opacity-90">PDF → TXT</button>
+          <button id="quick-pptx-zip" class="px-4 py-2 rounded-xl bg-white text-slate-900 font-semibold hover:opacity-90">PPTX → ZIP</button>
+        </div>
+      </div>
+      <div>
+        <div id="dropzone"
+             class="relative dropzone rounded-2xl bg-white/5 border-2 border-dashed border-white/30 p-8 flex flex-col items-center justify-center text-center cursor-pointer select-none">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" class="mb-3 opacity-90">
+            <path d="M12 16V4m0 12l-3-3m3 3l3-3M6 20h12a2 2 0 002-2v-3a2 2 0 00-2-2h-.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="text-white text-lg">Arrastra tus archivos aquí</p>
+          <p class="text-white/80 text-sm">o haz clic para seleccionar (.docx, .pptx, .pdf)</p>
+          <!-- Input cubre toda el área -->
+          <input id="fileInput" type="file"
+                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                 accept=".docx,.pptx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                 multiple>
+        </div>
+        <div class="mt-3 flex items-center justify-between">
+          <div class="text-white/90 text-xs">Procesamiento local, sin subir a servidores.</div>
+          <button id="clearBtn" class="text-white/90 text-xs underline decoration-white/40 hover:decoration-white">Limpiar lista</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          <div id="fileList" class="mt-4 hidden">
-            <h3 class="text-sm uppercase tracking-wide text-slate-400 mb-2">Archivos seleccionados</h3>
-            <ul id="filesUl" class="space-y-2"></ul>
+  <!-- Panel principal -->
+  <main class="max-w-6xl mx-auto px-4 py-10">
+    <div class="grid lg:grid-cols-3 gap-6">
+      <!-- Archivos -->
+      <section class="lg:col-span-2 rounded-2xl bg-card p-6 border border-white/5">
+        <h3 class="font-semibold mb-3">Archivos seleccionados</h3>
+        <ul id="filesUl" class="space-y-2 text-sm"></ul>
+
+        <div class="mt-6 grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-1 text-slate-400">Acción</label>
+            <select id="actionSelect" class="w-full rounded-xl bg-slate-900/50 border border-slate-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pri">
+              <option value="auto">Auto (recomendado)</option>
+              <option value="docx2pdf">DOCX → PDF (texto real)</option>
+              <option value="pdf2img">PDF → Imágenes (PNG .zip)</option>
+              <option value="pdf2txt">PDF → TXT</option>
+              <option value="pptx2zip">PPTX → ZIP (imágenes + texto)</option>
+              <option value="docx2html">DOCX → HTML</option>
+              <option value="pptx2txt">PPTX → TXT</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="convertBtn" class="w-full rounded-xl bg-pri text-white font-semibold py-2.5 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">Convertir</button>
           </div>
         </div>
 
-        <aside class="md:col-span-1">
-          <div class="rounded-2xl bg-card2 p-5 border border-slate-800/70">
-            <h2 class="font-semibold mb-3">Salida deseada</h2>
-            <label class="block text-sm mb-1 text-slate-400">Formato</label>
-            <select id="outputFormat" class="w-full rounded-xl bg-slate-900/50 border border-slate-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pri">
-              <option value="auto">Auto (recomendado)</option>
-              <option value="pdf">PDF</option>
-              <option value="html">HTML</option>
-              <option value="txt">Texto (.txt)</option>
-              <option value="images">Imágenes (.png en .zip)</option>
-            </select>
+        <div id="status" class="mt-5 text-xs text-slate-400 space-y-1 max-h-60 overflow-auto border-t border-white/5 pt-3"></div>
+      </section>
 
-            <button id="convertBtn" class="mt-5 w-full rounded-xl bg-gradient-to-r from-pri to-pri2 text-slate-900 font-semibold py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">Convertir</button>
+      <!-- Vista previa / Salida -->
+      <section class="rounded-2xl bg-card p-6 border border-white/5">
+        <h3 class="font-semibold mb-3">Vista previa</h3>
+        <div id="preview" class="min-h-[180px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto text-sm"></div>
+        <h3 class="font-semibold mb-3 mt-6">Salida</h3>
+        <div id="output" class="min-h-[160px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto text-sm"></div>
+      </section>
+    </div>
 
-            <div id="status" class="mt-4 text-xs text-slate-400 space-y-1 max-h-44 overflow-auto"></div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="mt-8 grid md:grid-cols-2 gap-6">
-      <div class="rounded-2xl bg-card p-6 border border-slate-800/70">
-        <h3 class="font-semibold mb-2">Vista previa</h3>
-        <div id="preview" class="min-h-[180px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto"></div>
-      </div>
-      <div class="rounded-2xl bg-card p-6 border border-slate-800/70">
-        <h3 class="font-semibold mb-2">Salida</h3>
-        <div id="output" class="min-h-[180px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto text-sm"></div>
-      </div>
-    </section>
-
-    <section class="mt-12 text-center text-xs text-slate-500">
-      Todo se procesa localmente en tu navegador. Formatos soportados de entrada: <b>DOCX, PPTX, PDF</b>.
-    </section>
+    <p class="mt-10 text-center text-xs text-slate-500">Entrada soportada: <b>DOCX, PPTX, PDF</b>. Todo corre en tu navegador.</p>
   </main>
 
-  <!-- LÓGICA -->
   <script>
   (function(){
     function ready(fn){ if(document.readyState!=='loading'){ fn(); } else { document.addEventListener('DOMContentLoaded', fn); } }
     ready(function(){
       const dropzone = document.getElementById('dropzone');
       const fileInput = document.getElementById('fileInput');
-      const fileList = document.getElementById('fileList');
       const filesUl = document.getElementById('filesUl');
       const preview = document.getElementById('preview');
       const output = document.getElementById('output');
       const convertBtn = document.getElementById('convertBtn');
       const statusBox = document.getElementById('status');
-      const outputFormat = document.getElementById('outputFormat');
+      const actionSelect = document.getElementById('actionSelect');
+      const clearBtn = document.getElementById('clearBtn');
 
-      // Calidad fija alta (PDF.js base 72dpi * 2.5 ≈ 180dpi)
-      const RENDER_SCALE = 2.5;
+      const quickDocxPdf = document.getElementById('quick-docx-pdf');
+      const quickPdfImg  = document.getElementById('quick-pdf-img');
+      const quickPdfTxt  = document.getElementById('quick-pdf-txt');
+      const quickPptxZip = document.getElementById('quick-pptx-zip');
+
+      const RENDER_SCALE = 2.5; // ~180 dpi efectivos
 
       let files = [];
 
-      // Evita abrir el archivo cuando cae fuera del dropzone
+      // Previene que el navegador abra archivos si se sueltan fuera
       ['dragover','drop'].forEach(evt => window.addEventListener(evt, e => { e.preventDefault(); }, false));
 
       function humanSize(bytes){ const u=['B','KB','MB','GB']; let i=0, v=bytes; while(v>=1024&&i<u.length-1){ v/=1024; i++; } return v.toFixed(1)+' '+u[i]; }
-      function setStatus(msg,type='info'){ const c={info:'text-slate-400', ok:'text-emerald-400', warn:'text-amber-400', err:'text-rose-400'}; const p=document.createElement('p'); p.className=c[type]+' whitespace-pre-wrap'; p.textContent=msg; statusBox.appendChild(p); statusBox.scrollTop=statusBox.scrollHeight; }
-      function resetUI(){
+      function setStatus(msg,type='info'){
+        const c={info:'text-slate-400', ok:'text-emerald-400', warn:'text-amber-400', err:'text-rose-400'};
+        const p=document.createElement('p'); p.className=c[type]+' whitespace-pre-wrap'; p.textContent=msg;
+        statusBox.appendChild(p); statusBox.scrollTop=statusBox.scrollHeight;
+      }
+      function renderList(){
         filesUl.innerHTML='';
-        if(files.length){
-          fileList.classList.remove('hidden');
-          files.forEach((f,idx)=>{
-            const li=document.createElement('li');
-            li.className='flex items-center justify-between gap-2 bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-2';
-            li.innerHTML=`<div class="truncate"><span class="text-slate-200">${f.name}</span> <span class="text-slate-500 text-xs">(${humanSize(f.size)})</span></div><button class="text-rose-400 text-xs" data-rm="${idx}">Quitar</button>`;
-            filesUl.appendChild(li);
-          });
-        } else {
-          fileList.classList.add('hidden');
+        if(!files.length){
+          const li=document.createElement('li');
+          li.className='text-slate-400 text-sm italic';
+          li.textContent='No hay archivos seleccionados.';
+          filesUl.appendChild(li);
+          convertBtn.disabled = true;
+          return;
         }
-        convertBtn.disabled = files.length===0;
-        preview.innerHTML='';
-        output.innerHTML='';
-        statusBox.innerHTML='';
+        files.forEach((f,idx)=>{
+          const li=document.createElement('li');
+          li.className='flex items-center justify-between gap-2 bg-slate-900/40 border border-white/5 rounded-xl px-3 py-2';
+          li.innerHTML=`
+            <div class="truncate"><span class="text-ink">${f.name}</span>
+            <span class="text-slate-500 text-xs">(${humanSize(f.size)})</span></div>
+            <div class="flex items-center gap-3">
+              <button class="text-xs text-pri hover:underline" data-preview="${idx}">Prever</button>
+              <button class="text-xs text-rose-400 hover:underline" data-rm="${idx}">Quitar</button>
+            </div>`;
+          filesUl.appendChild(li);
+        });
+        convertBtn.disabled = false;
       }
 
-      // Drag & drop sobre la caja
-      dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
-      dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('dragover'));
-      dropzone.addEventListener('drop', (e)=>{ e.preventDefault(); dropzone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-
-      // Cambios por selección
-      fileInput.addEventListener('change', (e)=> handleFiles(e.target.files));
-
-      filesUl.addEventListener('click', (e)=>{
-        const btn=e.target.closest('button[data-rm]');
-        if(!btn) return;
-        const idx=Number(btn.getAttribute('data-rm'));
-        files.splice(idx,1);
-        resetUI();
-      });
-
-      function handleFiles(fileListIn){
+      function addFiles(fileListIn){
         const accepted=[
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -181,195 +206,300 @@
             setStatus(`Formato no soportado: ${f.name}`,'warn');
           }
         });
-        resetUI();
+        renderList();
         if(files[0]) showQuickPreview(files[0]);
       }
 
-      async function showQuickPreview(file){
-        preview.innerHTML = '<p class="text-slate-400 text-sm">Generando vista previa…</p>';
-        const ext = file.name.split('.').pop().toLowerCase();
-        const buf = await file.arrayBuffer();
-        if(ext==='docx'){
-          const { value: html } = await mammoth.convertToHtml({ arrayBuffer: buf });
-          preview.innerHTML = `<article class="prose prose-invert max-w-none">${html}</article>`;
-        } else if (ext==='pdf'){
-          if(!window.pdfjsLib){ preview.innerHTML='<p class="text-amber-400">pdf.js no cargó.</p>'; return; }
-          const loadingTask = pdfjsLib.getDocument({ data: buf });
-          const pdf = await loadingTask.promise;
-          const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: RENDER_SCALE });
-          const canvas=document.createElement('canvas');
-          const ctx=canvas.getContext('2d');
-          canvas.width=Math.ceil(viewport.width);
-          canvas.height=Math.ceil(viewport.height);
-          await page.render({ canvasContext: ctx, viewport }).promise;
-          preview.innerHTML='';
-          preview.appendChild(canvas);
-        } else if (ext==='pptx'){
-          const zip = await JSZip.loadAsync(buf);
-          const slide1 = zip.file('ppt/slides/slide1.xml');
-          if(slide1){
-            const xml = await slide1.async('text');
-            const texts=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
-            preview.innerHTML = `<div class="text-slate-300"><b>Texto (1ª diapositiva):</b><br>${texts.slice(0,6).join(' · ') || '<i>Sin texto</i>'}</div>`;
-          } else {
-            preview.innerHTML = '<p class="text-slate-400 text-sm">No se encontró contenido de diapositivas.</p>';
-          }
-        }
-      }
+      // Eventos de dropzone
+      dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+      dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop', (e)=>{ e.preventDefault(); dropzone.classList.remove('dragover'); addFiles(e.dataTransfer.files); });
+      fileInput.addEventListener('change', (e)=> addFiles(e.target.files));
 
-      convertBtn.addEventListener('click', async ()=>{
-        output.innerHTML='';
-        statusBox.innerHTML='';
-        if(!files.length) return;
-        setStatus('Iniciando conversión…');
-        for(const f of files){
-          try { await convertOne(f); }
-          catch(err){ console.error(err); setStatus(`Error con ${f.name}: ${err.message||err}`,'err'); }
-        }
-        setStatus('Conversión finalizada ✅','ok');
+      // Botón limpiar
+      clearBtn.addEventListener('click', ()=>{
+        files = []; renderList(); preview.innerHTML=''; output.innerHTML=''; statusBox.innerHTML='';
       });
 
-      function autoTargetFor(ext){ switch(ext){ case 'docx': return 'pdf'; case 'pdf': return 'images'; case 'pptx': return 'images'; default: return 'txt'; } }
-
-      async function convertOne(file){
-        const ext = file.name.split('.').pop().toLowerCase();
-        const target = outputFormat.value==='auto' ? autoTargetFor(ext) : outputFormat.value;
-        setStatus(`→ ${file.name} (${ext}) → ${target.toUpperCase()}`);
-        const buf = await file.arrayBuffer();
-        if(ext==='docx') await convertDocx(buf, file.name, target);
-        else if(ext==='pdf') await convertPdf(buf, file.name, target);
-        else if(ext==='pptx') await convertPptx(buf, file.name, target);
-        else throw new Error('Extensión no soportada');
-      }
-
-      async function convertDocx(buf, filename, target){
-        if(target==='html' || target==='pdf'){
-          const { value: html, messages } = await mammoth.convertToHtml({ arrayBuffer: buf });
-          if(messages && messages.length) setStatus(`Avisos DOCX: ${messages.length}`,'warn');
-          const page = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${filename}</title><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;padding:24px;line-height:1.6;color:#111}img{max-width:100%}</style></head><body>${html}</body></html>`;
-          if(target==='html'){
-            const blob = new Blob([page], { type:'text/html' });
-            const outName=filename.replace(/\.docx$/i,'.html');
-            saveAs(blob,outName);
-            outputInsertLink(outName,blob);
-          } else {
-            const container=document.createElement('div');
-            container.innerHTML=page;
-            await html2pdf().from(container).set({
-              filename: filename.replace(/\.docx$/i,'.pdf'),
-              image:{type:'jpeg',quality:0.95},
-              html2canvas:{scale:2},
-              jsPDF:{unit:'pt', format:'a4', orientation:'portrait'}
-            }).save();
-            output.innerHTML += `<div class="text-slate-300">Descargado <b>${filename.replace(/\.docx$/i,'.pdf')}</b></div>`;
-          }
-        } else if (target==='txt'){
-          const { value: text } = await mammoth.extractRawText({ arrayBuffer: buf });
-          const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
-          const out=filename.replace(/\.docx$/i,'.txt');
-          saveAs(blob,out);
-          outputInsertLink(out,blob);
-        } else if (target==='images'){
-          setStatus('DOCX → imágenes no directo. Genera PDF y luego conviértelo a imágenes.','warn');
+      // Lista: quitar / prever
+      filesUl.addEventListener('click', async (e)=>{
+        const rm = e.target.closest('button[data-rm]');
+        const pv = e.target.closest('button[data-preview]');
+        if(rm){
+          const idx=Number(rm.getAttribute('data-rm'));
+          files.splice(idx,1); renderList();
+          return;
         }
-      }
+        if(pv){
+          const idx=Number(pv.getAttribute('data-preview'));
+          if(files[idx]) await showQuickPreview(files[idx]);
+        }
+      });
 
-      async function convertPdf(buf, filename, target){
-        const doc = await pdfjsLib.getDocument({ data: buf }).promise;
-        const pageCount = doc.numPages;
-        if(target==='txt'){
-          let all='';
-          for(let p=1;p<=pageCount;p++){
-            const page=await doc.getPage(p);
-            const content=await page.getTextContent();
-            const text=content.items.map(i=>i.str).join(' ');
-            all += `\n\n--- Página ${p} ---\n${text}`;
-          }
-          const blob=new Blob([all.trim()],{type:'text/plain;charset=utf-8'});
-          const out=filename.replace(/\.pdf$/i,'.txt');
-          saveAs(blob,out);
-          outputInsertLink(out,blob);
-        } else if (target==='images' || target==='pdf'){
-          const zip=new JSZip();
-          for(let p=1;p<=pageCount;p++){
-            const page=await doc.getPage(p);
-            const viewport=page.getViewport({ scale: RENDER_SCALE });
+      // Vista previa rápida
+      async function showQuickPreview(file){
+        preview.innerHTML = '<p class="text-slate-400 text-sm">Generando vista previa…</p>';
+        try{
+          const ext = file.name.split('.').pop().toLowerCase();
+          const buf = await file.arrayBuffer();
+          if(ext==='docx'){
+            const { value: html } = await mammoth.convertToHtml({ arrayBuffer: buf });
+            preview.innerHTML = `<article class="prose prose-invert max-w-none">${html}</article>`;
+          } else if (ext==='pdf'){
+            if(!window.pdfjsLib){ preview.innerHTML='<p class="text-amber-400">pdf.js no cargó.</p>'; return; }
+            const loadingTask = pdfjsLib.getDocument({ data: buf });
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: RENDER_SCALE });
             const canvas=document.createElement('canvas');
             const ctx=canvas.getContext('2d');
             canvas.width=Math.ceil(viewport.width);
             canvas.height=Math.ceil(viewport.height);
             await page.render({ canvasContext: ctx, viewport }).promise;
-            const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-            zip.file(`page-${String(p).padStart(3,'0')}.png`, blob);
-            setStatus(`Página ${p}/${pageCount} renderizada`);
+            preview.innerHTML=''; preview.appendChild(canvas);
+          } else if (ext==='pptx'){
+            const zip = await JSZip.loadAsync(buf);
+            const slide1 = zip.file('ppt/slides/slide1.xml');
+            if(slide1){
+              const xml = await slide1.async('text');
+              const texts=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
+              preview.innerHTML = `<div class="text-slate-300"><b>Texto (1ª diapositiva):</b><br>${texts.slice(0,8).join(' · ') || '<i>Sin texto</i>'}</div>`;
+            } else {
+              preview.innerHTML = '<p class="text-slate-400 text-sm">No se encontró contenido de diapositivas.</p>';
+            }
           }
-          const zipBlob=await zip.generateAsync({ type:'blob' });
-          const out=filename.replace(/\.pdf$/i,'_png.zip');
-          saveAs(zipBlob,out);
-          outputInsertLink(out,zipBlob);
-        } else if (target==='html'){
-          setStatus('PDF → HTML completo no soportado. Usa PDF→TXT o PDF→Imágenes.','warn');
+        } catch(err){
+          preview.innerHTML = `<p class="text-rose-400 text-sm">Vista previa fallida: ${err?.message||err}</p>`;
         }
       }
 
-      async function convertPptx(buf, filename, target){
-        const zip = await JSZip.loadAsync(buf);
-        const media=Object.values(zip.files).filter(f=>f.name.startsWith('ppt/media/')&&!f.dir);
-        const slides=Object.values(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f.name));
-        if(target==='images' || target==='pdf'){
-          if(!media.length) setStatus('No se encontraron imágenes incrustadas en el PPTX.','warn');
-          const outZip=new JSZip();
-          let i=1;
-          for(const img of media){
-            const blob=await img.async('blob');
-            const ext=img.name.split('.').pop().toLowerCase();
-            outZip.file(`slide-media-${String(i++).padStart(3,'0')}.${ext}`, blob);
-          }
-          const texts=[];
-          for(const s of slides){
-            const xml=await s.async('text');
-            const arr=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
-            texts.push(`# ${s.name}\n${arr.join(' ')}\n`);
-          }
-          outZip.file('text-extract.txt', texts.join('\n'));
-          const zipBlob=await outZip.generateAsync({ type:'blob' });
-          const outName=filename.replace(/\.pptx$/i,'_extract.zip');
-          saveAs(zipBlob,outName);
-          outputInsertLink(outName,zipBlob);
-          if(target==='pdf') setStatus('PPTX → PDF directo no soportado; se entregó ZIP con imágenes+texto.','warn');
-        } else if (target==='txt' || target==='html'){
-          const texts=[];
-          for(const s of slides){
-            const xml=await s.async('text');
-            const arr=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
-            texts.push(arr.join(' '));
-          }
-          if(target==='txt'){
-            const blob=new Blob([texts.join('\n\n---\n\n')],{type:'text/plain;charset=utf-8'});
-            const out=filename.replace(/\.pptx$/i,'.txt');
-            saveAs(blob,out);
-            outputInsertLink(out,blob);
-          } else {
-            const html = `<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>${filename}</title></head><body><main style=\"font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;padding:24px;line-height:1.6\">${texts.map((t,i)=>`<section><h2>Diapositiva ${i+1}</h2><p>${t || '<i>(vacía)</i>'}</p></section>`).join('')}</main></body></html>`;
-            const blob=new Blob([html],{type:'text/html'});
-            const out=filename.replace(/\.pptx$/i,'.html');
-            saveAs(blob,out);
-            outputInsertLink(out,blob);
-          }
-        } else {
-          setStatus('Formato de salida no soportado para PPTX.','warn');
+      // Quick action buttons
+      quickDocxPdf.addEventListener('click', ()=> actionSelect.value='docx2pdf');
+      quickPdfImg .addEventListener('click', ()=> actionSelect.value='pdf2img');
+      quickPdfTxt .addEventListener('click', ()=> actionSelect.value='pdf2txt');
+      quickPptxZip.addEventListener('click', ()=> actionSelect.value='pptx2zip');
+
+      // Acción por defecto en función de la extensión
+      function autoActionFor(ext){
+        switch(ext){
+          case 'docx': return 'docx2pdf';
+          case 'pdf':  return 'pdf2img';
+          case 'pptx': return 'pptx2zip';
+          default:     return 'auto';
         }
       }
 
-      function outputInsertLink(name, blob){
+      convertBtn.addEventListener('click', async ()=>{
+        output.innerHTML=''; statusBox.innerHTML='';
+        if(!files.length){ setStatus('No hay archivos.','warn'); return; }
+        setStatus('Iniciando…');
+        for(const f of files){
+          try{
+            const ext=f.name.split('.').pop().toLowerCase();
+            const action = (actionSelect.value==='auto') ? autoActionFor(ext) : actionSelect.value;
+            setStatus(`→ ${f.name} usando ${action}`);
+            const buf = await f.arrayBuffer();
+            if(action==='docx2pdf'){
+              await docxToPdf(buf, f.name);
+            } else if (action==='pdf2img'){
+              await pdfToImagesZip(buf, f.name);
+            } else if (action==='pdf2txt'){
+              await pdfToTxt(buf, f.name);
+            } else if (action==='pptx2zip'){
+              await pptxToZip(buf, f.name);
+            } else if (action==='docx2html'){
+              await docxToHtml(buf, f.name);
+            } else if (action==='pptx2txt'){
+              await pptxToTxt(buf, f.name);
+            } else {
+              setStatus(`Acción no soportada: ${action}`,'warn');
+            }
+          }catch(err){
+            console.error(err);
+            setStatus(`Error: ${err?.message||err}`,'err');
+          }
+        }
+        setStatus('Proceso completado ✅','ok');
+      });
+
+      function linkOut(name, blob){
         const url=URL.createObjectURL(blob);
         const a=document.createElement('a');
         a.href=url; a.download=name; a.textContent=`Descargar ${name}`;
         a.className='inline-block text-pri hover:underline';
-        const p=document.createElement('p');
-        p.appendChild(a);
-        output.appendChild(p);
+        const p=document.createElement('p'); p.appendChild(a); output.appendChild(p);
+      }
+
+      async function docxToHtml(buf, filename){
+        const styleMap = [
+          "p[style-name='Heading 1'] => h1:fresh",
+          "p[style-name='Heading 2'] => h2:fresh",
+          "p[style-name='Heading 3'] => h3:fresh",
+          "u => u", "b => strong", "i => em",
+          "table => table", "tr => tr", "td => td", "th => th",
+          "ol => ol", "ul => ul", "li => li"
+        ].join("\n");
+
+        const { value: html, messages } = await mammoth.convertToHtml(
+          { arrayBuffer: buf }, { styleMap }
+        );
+        if(messages?.length) setStatus(`Avisos DOCX: ${messages.length}`,'warn');
+
+        const page = `<!doctype html>
+<html lang="es"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${filename.replace(/\.docx$/i,'')}</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;line-height:1.55;color:#111;margin:0;padding:24px;max-width:900px;margin-inline:auto;background:#fff}
+    img{max-width:100%;height:auto}
+    h1,h2,h3{line-height:1.25;margin:1.1em 0 .5em}
+    p{margin:.6em 0}
+    table{width:100%;border-collapse:collapse;margin:1em 0}
+    th,td{border:1px solid #d1d5db;padding:.5em;vertical-align:top}
+    ul,ol{margin:.6em 0 .6em 1.2em}
+    hr{border:none;border-top:1px solid #e5e7eb;margin:1.5em 0}
+    @media print{@page{size:A4;margin:20mm} body{max-width:unset;padding:0}}
+  </style>
+</head><body><main>${html}</main></body></html>`;
+
+        const blob = new Blob([page],{type:'text/html'});
+        const outName=filename.replace(/\.docx$/i,'.html');
+        saveAs(blob,outName);
+        linkOut(outName,blob);
+      }
+
+      async function openPrintableHtml(htmlString, suggestedTitle){
+        // Abre una pestaña con el HTML y lanza impresión (usuario elige “Guardar como PDF”).
+        const win = window.open('', '_blank');
+        if(!win){ setStatus('Bloqueado por el navegador. Permite popups para imprimir.','warn'); return; }
+        win.document.open();
+        win.document.write(htmlString);
+        win.document.close();
+        win.focus();
+        // Espera un frame para asegurar estilos
+        setTimeout(()=> { try{ win.print(); } catch(_){} }, 250);
+      }
+
+      async function docxToPdf(buf, filename){
+        // Genera HTML limpio y lo manda a imprimir (texto real)
+        const styleMap = [
+          "p[style-name='Heading 1'] => h1:fresh",
+          "p[style-name='Heading 2'] => h2:fresh",
+          "p[style-name='Heading 3'] => h3:fresh",
+          "u => u", "b => strong", "i => em",
+          "table => table", "tr => tr", "td => td", "th => th",
+          "ol => ol", "ul => ul", "li => li"
+        ].join("\n");
+
+        const { value: html, messages } = await mammoth.convertToHtml(
+          { arrayBuffer: buf }, { styleMap }
+        );
+        if(messages?.length) setStatus(`Avisos DOCX: ${messages.length}`,'warn');
+
+        const printable = `<!doctype html>
+<html lang="es"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${filename.replace(/\.docx$/i,'')}</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;line-height:1.55;color:#111;margin:0;padding:24px;max-width:900px;margin-inline:auto;background:#fff}
+    img{max-width:100%;height:auto}
+    h1,h2,h3{line-height:1.25;margin:1.1em 0 .5em}
+    p{margin:.6em 0}
+    table{width:100%;border-collapse:collapse;margin:1em 0}
+    th,td{border:1px solid #d1d5db;padding:.5em;vertical-align:top}
+    ul,ol{margin:.6em 0 .6em 1.2em}
+    hr{border:none;border-top:1px solid #e5e7eb;margin:1.5em 0}
+    @media print{@page{size:A4;margin:20mm} body{max-width:unset;padding:0}}
+  </style>
+</head><body>
+  <main>${html}</main>
+  <script>window.addEventListener('load',()=>{setTimeout(()=>{try{window.print()}catch(e){}},150)});<\/script>
+</body></html>`;
+
+        await openPrintableHtml(printable, filename.replace(/\.docx$/i,'.pdf'));
+        // Además dejo opción de descargar HTML
+        const blob = new Blob([printable],{type:'text/html'});
+        const outName=filename.replace(/\.docx$/i,'-imprimible.html');
+        linkOut(outName, blob);
+      }
+
+      async function pdfToTxt(buf, filename){
+        const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+        const pageCount = doc.numPages;
+        let all='';
+        for(let p=1;p<=pageCount;p++){
+          const page=await doc.getPage(p);
+          const content=await page.getTextContent();
+          const text=content.items.map(i=>i.str).join(' ');
+          all += `\n\n--- Página ${p} ---\n${text}`;
+          setStatus(`Texto extraído: página ${p}/${pageCount}`);
+        }
+        const blob=new Blob([all.trim()],{type:'text/plain;charset=utf-8'});
+        const out=filename.replace(/\.pdf$/i,'.txt');
+        saveAs(blob,out); linkOut(out,blob);
+      }
+
+      async function pdfToImagesZip(buf, filename){
+        const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+        const pageCount = doc.numPages;
+        const zip=new JSZip();
+        for(let p=1;p<=pageCount;p++){
+          const page=await doc.getPage(p);
+          const viewport=page.getViewport({ scale: RENDER_SCALE });
+          const canvas=document.createElement('canvas');
+          const ctx=canvas.getContext('2d');
+          canvas.width=Math.ceil(viewport.width);
+          canvas.height=Math.ceil(viewport.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+          zip.file(`page-${String(p).padStart(3,'0')}.png`, blob);
+          setStatus(`Página ${p}/${pageCount} renderizada`);
+        }
+        const zipBlob=await zip.generateAsync({ type:'blob' });
+        const out=filename.replace(/\.pdf$/i,'_png.zip');
+        saveAs(zipBlob,out); linkOut(out,zipBlob);
+      }
+
+      async function pptxToZip(buf, filename){
+        const zip = await JSZip.loadAsync(buf);
+        const media=Object.values(zip.files).filter(f=>f.name.startsWith('ppt/media/')&&!f.dir);
+        const slides=Object.values(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f.name));
+        const outZip=new JSZip();
+
+        // Medios
+        let i=1;
+        for(const img of media){
+          const blob=await img.async('blob');
+          const ext=img.name.split('.').pop().toLowerCase();
+          outZip.file(`media-${String(i++).padStart(3,'0')}.${ext}`, blob);
+        }
+
+        // Texto
+        const texts=[];
+        for(const s of slides){
+          const xml=await s.async('text');
+          const arr=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
+          texts.push(`Slide ${s.name.replace('ppt/slides/','').replace('.xml','')}\n${arr.join(' ')}\n`);
+        }
+        outZip.file('slides-text.txt', texts.join('\n'));
+
+        const zipBlob=await outZip.generateAsync({ type:'blob' });
+        const outName=filename.replace(/\.pptx$/i,'_extract.zip');
+        saveAs(zipBlob,outName); linkOut(outName,zipBlob);
+      }
+
+      async function pptxToTxt(buf, filename){
+        const zip = await JSZip.loadAsync(buf);
+        const slides=Object.values(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f.name));
+        const texts=[];
+        for(const s of slides){
+          const xml=await s.async('text');
+          const arr=[...xml.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(m=>m[1]);
+          texts.push(arr.join(' '));
+        }
+        const blob=new Blob([texts.join('\n\n---\n\n')],{type:'text/plain;charset=utf-8'});
+        const out=filename.replace(/\.pptx$/i,'.txt');
+        saveAs(blob,out); linkOut(out,blob);
       }
     });
   })();
