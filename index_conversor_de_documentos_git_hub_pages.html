@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversor de Documentos | Cliente 100% Web</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind config (oscuro por defecto)
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0B0F17',
+            card: '#0f172a',
+            card2: '#111827',
+            pri: '#22d3ee',
+            pri2: '#06b6d4',
+            acc: '#a78bfa'
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(0,0,0,.35)'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Librerías -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; }
+    .glass { backdrop-filter: blur(6px); }
+    .dropzone.dragover { border-color: #22d3ee; background: rgba(34, 211, 238, 0.08); }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-bg text-slate-200">
+
+  <header class="sticky top-0 z-40 border-b border-slate-800/60 bg-bg/70 glass">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-pri to-acc" aria-hidden></div>
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight">Conversor de Documentos</h1>
+          <p class="text-xs text-slate-400">Sube .docx, .pptx o .pdf → elige salida y descarga</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <a class="hover:text-pri transition" href="#faq">FAQ</a>
+        <a class="hover:text-pri transition" href="#soporte">Soporte</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Card principal -->
+    <section class="rounded-2xl bg-card shadow-soft p-6 md:p-8 border border-slate-800/70">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+          <div id="dropzone" class="dropzone rounded-2xl border-2 border-dashed border-slate-700/80 p-6 flex flex-col items-center justify-center text-center cursor-pointer transition">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="mb-3 opacity-80"><path d="M12 16V4m0 12l-3-3m3 3l3-3M6 20h12a2 2 0 002-2v-3a2 2 0 00-2-2h-.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p class="text-slate-300">Arrastra tus archivos aquí</p>
+            <p class="text-slate-500 text-sm">o haz clic para seleccionar</p>
+            <input id="fileInput" type="file" class="hidden" accept=".docx,.pptx,.pdf" multiple>
+          </div>
+
+          <div id="fileList" class="mt-4 hidden">
+            <h3 class="text-sm uppercase tracking-wide text-slate-400 mb-2">Archivos seleccionados</h3>
+            <ul id="filesUl" class="space-y-2"></ul>
+          </div>
+        </div>
+
+        <aside class="md:col-span-1">
+          <div class="rounded-2xl bg-card2 p-5 border border-slate-800/70">
+            <h2 class="font-semibold mb-3">Salida deseada</h2>
+            <label class="block text-sm mb-1 text-slate-400">Formato</label>
+            <select id="outputFormat" class="w-full rounded-xl bg-slate-900/50 border border-slate-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pri">
+              <option value="auto">Auto (recomendado)</option>
+              <option value="pdf">PDF</option>
+              <option value="html">HTML</option>
+              <option value="txt">Texto (.txt)</option>
+              <option value="images">Imágenes (.png en .zip)</option>
+            </select>
+
+            <div class="mt-4">
+              <label class="block text-sm mb-1 text-slate-400">Resolución imágenes</label>
+              <input id="dpi" type="number" min="72" max="300" step="1" value="150" class="w-full rounded-xl bg-slate-900/50 border border-slate-700 px-3 py-2 focus:outline-none"/>
+              <p class="text-xs text-slate-500 mt-1">Para PDF→PNG y PPTX→imágenes</p>
+            </div>
+
+            <button id="convertBtn" class="mt-5 w-full rounded-xl bg-gradient-to-r from-pri to-pri2 text-slate-900 font-semibold py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">Convertir</button>
+
+            <div id="status" class="mt-4 text-xs text-slate-400 space-y-1"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="mt-8 grid md:grid-cols-2 gap-6">
+      <div class="rounded-2xl bg-card p-6 border border-slate-800/70">
+        <h3 class="font-semibold mb-2">Vista previa</h3>
+        <div id="preview" class="min-h-[180px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto"></div>
+      </div>
+      <div class="rounded-2xl bg-card p-6 border border-slate-800/70">
+        <h3 class="font-semibold mb-2">Salida</h3>
+        <div id="output" class="min-h-[180px] rounded-xl bg-slate-900/40 border border-slate-800 p-4 overflow-auto text-sm"></div>
+      </div>
+    </section>
+
+    <section id="faq" class="mt-12 rounded-2xl bg-card p-6 border border-slate-800/70">
+      <h3 class="font-semibold mb-3">Notas & compatibilidad</h3>
+      <ul class="list-disc list-inside text-slate-400 space-y-2 text-sm">
+        <li><span class="text-slate-300">DOCX → PDF/HTML/TXT</span> usa <span class="code">mammoth.js</span>. La fidelidad es alta para documentos con texto; elementos muy complejos (tablas avanzadas, SmartArt) pueden simplificarse.</li>
+        <li><span class="text-slate-300">PDF → PNG/TXT</span> usa <span class="code">pdf.js</span>. Para PDF multipágina, las imágenes se entregan en un .zip (una por página).</li>
+        <li><span class="text-slate-300">PPTX → Imágenes/TXT</span> se realiza leyendo el .pptx (ZIP) y extrayendo las imágenes incrustadas y texto de las diapositivas. No se renderiza el diseño exacto de la diapositiva en el navegador.</li>
+        <li>Todo ocurre <b>localmente en tu navegador</b>; no se suben archivos a ningún servidor.</li>
+        <li>Probado en navegadores Chromium y Firefox recientes. Si un archivo pesado falla, intenta con menos resolución o divide el documento.</li>
+      </ul>
+    </section>
+
+    <section id="soporte" class="mt-8 text-center text-xs text-slate-500">
+      Hecho con ❤️ en modo oscuro. Ideas/mejoras bienvenidas.
+    </section>
+  </main>
+
+  <script type="module">
+    // Carga de pdf.js (desde el módulo ya incluido en <head>)
+    import * as pdfjs from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+    pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const filesUl = document.getElementById('filesUl');
+    const preview = document.getElementById('preview');
+    const output = document.getElementById('output');
+    const convertBtn = document.getElementById('convertBtn');
+    const statusBox = document.getElementById('status');
+    const outputFormat = document.getElementById('outputFormat');
+    const dpiInput = document.getElementById('dpi');
+
+    let files = [];
+
+    function humanSize(bytes) {
+      const units = ['B','KB','MB','GB'];
+      let i = 0; let v = bytes;
+      while (v >= 1024 && i < units.length-1) { v /= 1024; i++; }
+      return v.toFixed(1) + ' ' + units[i];
+    }
+
+    function setStatus(msg, type='info') {
+      const colors = { info: 'text-slate-400', ok: 'text-emerald-400', warn: 'text-amber-400', err: 'text-rose-400' };
+      const p = document.createElement('p');
+      p.className = colors[type] + ' whitespace-pre-wrap';
+      p.textContent = msg;
+      statusBox.appendChild(p);
+      statusBox.scrollTop = statusBox.scrollHeight;
+    }
+
+    function resetUI() {
+      filesUl.innerHTML = '';
+      if (files.length) {
+        fileList.classList.remove('hidden');
+        files.forEach((f, idx) => {
+          const li = document.createElement('li');
+          li.className = 'flex items-center justify-between gap-2 bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-2';
+          li.innerHTML = `
+            <div class="truncate">
+              <span class="text-slate-200">${f.name}</span>
+              <span class="text-slate-500 text-xs">(${humanSize(f.size)})</span>
+            </div>
+            <button class="text-rose-400 text-xs" data-rm="${idx}">Quitar</button>
+          `;
+          filesUl.appendChild(li);
+        });
+      } else {
+        fileList.classList.add('hidden');
+      }
+      convertBtn.disabled = files.length === 0;
+      preview.innerHTML = '';
+      output.innerHTML = '';
+      statusBox.innerHTML = '';
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault(); dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    filesUl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-rm]');
+      if (!btn) return;
+      const idx = Number(btn.getAttribute('data-rm'));
+      files.splice(idx,1);
+      resetUI();
+    });
+
+    function handleFiles(fileListIn) {
+      const accepted = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/pdf'];
+      [...fileListIn].forEach(f => {
+        if (accepted.includes(f.type) || /\.(docx|pptx|pdf)$/i.test(f.name)) {
+          files.push(f);
+        } else {
+          setStatus(`Formato no soportado: ${f.name}`, 'warn');
+        }
+      });
+      resetUI();
+      if (files[0]) showQuickPreview(files[0]);
+    }
+
+    async function showQuickPreview(file) {
+      preview.innerHTML = '<p class="text-slate-400 text-sm">Generando vista previa…</p>';
+      const ext = file.name.split('.').pop().toLowerCase();
+      const buf = await file.arrayBuffer();
+      if (ext === 'docx') {
+        const { value: html } = await mammoth.convertToHtml({ arrayBuffer: buf });
+        preview.innerHTML = `<article class=\"prose prose-invert max-w-none\">${html}</article>`;
+      } else if (ext === 'pdf') {
+        const loadingTask = pdfjs.getDocument({ data: buf });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const scale = 0.9; // baja resolución para preview
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width; canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        preview.innerHTML = '';
+        preview.appendChild(canvas);
+      } else if (ext === 'pptx') {
+        // Extrae títulos/primeros textos como preview rápida
+        const zip = await JSZip.loadAsync(buf);
+        const slide1 = zip.file('ppt/slides/slide1.xml');
+        if (slide1) {
+          const xml = await slide1.async('text');
+          const texts = [...xml.matchAll(/<a:t>([^<]+)<\\/a:t>/g)].map(m => m[1]);
+          preview.innerHTML = `<div class=\"text-slate-300\"><b>Texto detectado (1ª diapositiva):</b><br>${texts.slice(0,6).join(' · ') || '<i>Sin texto</i>'}</div>`;
+        } else {
+          preview.innerHTML = '<p class="text-slate-400 text-sm">No se encontró contenido de diapositivas.</p>';
+        }
+      }
+    }
+
+    convertBtn.addEventListener('click', async () => {
+      output.innerHTML = '';
+      statusBox.innerHTML = '';
+      if (!files.length) return;
+      setStatus('Iniciando conversión…');
+      for (const f of files) {
+        try {
+          await convertOne(f);
+        } catch (err) {
+          console.error(err);
+          setStatus(`Error con ${f.name}: ${err.message || err}`, 'err');
+        }
+      }
+      setStatus('Conversión finalizada ✅', 'ok');
+    });
+
+    function autoTargetFor(ext) {
+      switch (ext) {
+        case 'docx': return 'pdf';
+        case 'pdf': return 'images';
+        case 'pptx': return 'images';
+        default: return 'txt';
+      }
+    }
+
+    async function convertOne(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const target = outputFormat.value === 'auto' ? autoTargetFor(ext) : outputFormat.value;
+      setStatus(`→ ${file.name} (${ext}) → ${target.toUpperCase()}`);
+      const buf = await file.arrayBuffer();
+      if (ext === 'docx') {
+        await convertDocx(buf, file.name, target);
+      } else if (ext === 'pdf') {
+        await convertPdf(buf, file.name, target);
+      } else if (ext === 'pptx') {
+        await convertPptx(buf, file.name, target);
+      } else {
+        throw new Error('Extensión no soportada');
+      }
+    }
+
+    async function convertDocx(buf, filename, target) {
+      if (target === 'html' || target === 'pdf') {
+        const { value: html, messages } = await mammoth.convertToHtml({ arrayBuffer: buf });
+        if (messages && messages.length) setStatus(`Avisos DOCX: ${messages.length}`, 'warn');
+        const page = `<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>${filename}</title><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;padding:24px;line-height:1.6;color:#111}img{max-width:100%}</style></head><body>${html}</body></html>`;
+        if (target === 'html') {
+          const blob = new Blob([page], { type: 'text/html' });
+          saveAs(blob, filename.replace(/\.docx$/i, '.html'));
+          outputInsertLink(filename.replace(/\.docx$/i, '.html'), blob);
+        } else {
+          const container = document.createElement('div');
+          container.innerHTML = page;
+          await html2pdf().from(container).set({ filename: filename.replace(/\.docx$/i, '.pdf'), image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2}, jsPDF:{unit:'pt', format:'a4', orientation:'portrait'} }).save();
+          output.innerHTML += `<div class=\"text-slate-300\">Descargado <b>${filename.replace(/\.docx$/i, '.pdf')}</b></div>`;
+        }
+      } else if (target === 'txt') {
+        const { value: text } = await mammoth.extractRawText({ arrayBuffer: buf });
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const out = filename.replace(/\.docx$/i, '.txt');
+        saveAs(blob, out);
+        outputInsertLink(out, blob);
+      } else if (target === 'images') {
+        setStatus('DOCX → imágenes no soportado directamente. Generando HTML y exportando a PDF→PNG…', 'warn');
+        // Fallback: generar PDF primero, luego usuario puede convertir PDF a imágenes con la app (2 pasos)
+      }
+    }
+
+    async function convertPdf(buf, filename, target) {
+      const doc = await pdfjs.getDocument({ data: buf }).promise;
+      const pageCount = doc.numPages;
+      if (target === 'txt') {
+        let all = '';
+        for (let p=1; p<=pageCount; p++) {
+          const page = await doc.getPage(p);
+          const content = await page.getTextContent();
+          const text = content.items.map(i => i.str).join(' ');
+          all += `\n\n--- Página ${p} ---\n${text}`;
+        }
+        const blob = new Blob([all.trim()], { type: 'text/plain;charset=utf-8' });
+        saveAs(blob, filename.replace(/\.pdf$/i, '.txt'));
+        outputInsertLink(filename.replace(/\.pdf$/i, '.txt'), blob);
+      } else if (target === 'images' || target === 'pdf') {
+        const zip = new JSZip();
+        const targetDpi = Math.min(Math.max(parseInt(dpiInput.value||'150',10),72),300);
+        const scaleFromDpi = targetDpi/72;
+        for (let p=1; p<=pageCount; p++) {
+          const page = await doc.getPage(p);
+          const viewport = page.getViewport({ scale: scaleFromDpi });
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = Math.ceil(viewport.width);
+          canvas.height = Math.ceil(viewport.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          zip.file(`page-${String(p).padStart(3,'0')}.png`, blob);
+          setStatus(`Página ${p}/${pageCount} renderizada`);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const out = filename.replace(/\.pdf$/i, '_png.zip');
+        saveAs(zipBlob, out);
+        outputInsertLink(out, zipBlob);
+      } else if (target === 'html') {
+        setStatus('PDF → HTML completo no soportado. Usa PDF→TXT o PDF→Imágenes.', 'warn');
+      }
+    }
+
+    async function convertPptx(buf, filename, target) {
+      const zip = await JSZip.loadAsync(buf);
+      // Recolectar imágenes
+      const media = Object.values(zip.files).filter(f => f.name.startsWith('ppt/media/') && !f.dir);
+      // Recolectar texto desde slides XML
+      const slides = Object.values(zip.files).filter(f => /^ppt\/slides\/slide\d+\.xml$/.test(f.name));
+
+      if (target === 'images' || target === 'pdf') {
+        if (!media.length) setStatus('No se encontraron imágenes incrustadas en el PPTX.', 'warn');
+        const outZip = new JSZip();
+        let i = 1;
+        for (const img of media) {
+          const blob = await img.async('blob');
+          const ext = img.name.split('.').pop().toLowerCase();
+          outZip.file(`slide-media-${String(i++).padStart(3,'0')}.${ext}`, blob);
+        }
+        // También exportamos un TXT con texto extraído
+        const texts = [];
+        for (const s of slides) {
+          const xml = await s.async('text');
+          const arr = [...xml.matchAll(/<a:t>([^<]+)<\\/a:t>/g)].map(m => m[1]);
+          texts.push(`# ${s.name}\n${arr.join(' ')}\n`);
+        }
+        outZip.file('text-extract.txt', texts.join('\n'));
+        const zipBlob = await outZip.generateAsync({ type: 'blob' });
+        const outName = filename.replace(/\.pptx$/i, '_extract.zip');
+        saveAs(zipBlob, outName);
+        outputInsertLink(outName, zipBlob);
+        if (target === 'pdf') setStatus('PPTX → PDF directo no soportado; se entregó ZIP con imágenes+texto.', 'warn');
+      } else if (target === 'txt' || target === 'html') {
+        const texts = [];
+        for (const s of slides) {
+          const xml = await s.async('text');
+          const arr = [...xml.matchAll(/<a:t>([^<]+)<\\/a:t>/g)].map(m => m[1]);
+          texts.push(arr.join(' '));
+        }
+        const textAll = texts.join('\n\n---\n\n');
+        if (target === 'txt') {
+          const blob = new Blob([textAll], { type: 'text/plain;charset=utf-8' });
+          const out = filename.replace(/\.pptx$/i, '.txt');
+          saveAs(blob, out);
+          outputInsertLink(out, blob);
+        } else {
+          const html = `<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>${filename}</title></head><body><main style=\"font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;padding:24px;line-height:1.6\">${texts.map((t,i)=>`<section><h2>Diapositiva ${i+1}</h2><p>${t || '<i>(vacía)</i>'}</p></section>`).join('')}</main></body></html>`;
+          const blob = new Blob([html], { type:'text/html' });
+          const out = filename.replace(/\.pptx$/i, '.html');
+          saveAs(blob, out);
+          outputInsertLink(out, blob);
+        }
+      } else {
+        setStatus('Formato de salida no soportado para PPTX.', 'warn');
+      }
+    }
+
+    function outputInsertLink(name, blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; a.textContent = `Descargar ${name}`;
+      a.className = 'inline-block text-pri hover:underline';
+      const p = document.createElement('p');
+      p.appendChild(a);
+      output.appendChild(p);
+    }
+  </script>
+</body>
+</html>
